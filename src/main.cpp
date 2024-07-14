@@ -1,17 +1,13 @@
 #include <Arduino.h>
-// #include <lgfx/v1/panel/Panel_M5HDMI.hpp>
-#include <M5AtomDisplay.h>
-
-#include <lgfx/v1/touch/Touch_XPT2046.hpp>
-
-#define DISPLAY_WIDTH 1024
-#define DISPLAY_HEIGHT 600
 
 // If you want to use a set of functions to handle SD/SPIFFS/HTTP,
 //  please include <SD.h>,<SPIFFS.h>,<HTTPClient.h> before <M5GFX.h>
 // #include <SD.h>
 // #include <SPIFFS.h>
 // #include <HTTPClient.h>
+
+#include <LovyanGFX.hpp>
+#include <lgfx/v1/LGFXBase.hpp>
 
 #if __has_include(<sdkconfig.h>)
 #include <sdkconfig.h>
@@ -25,10 +21,11 @@
 #endif
 
 #else
-#include "lgfx/v1/platforms/sdl/Panel_sdl.hpp"
+#include <lgfx/v1/platforms/sdl/Panel_sdl.hpp>
 #endif
-#include "M5GFX.h"
-#include "lgfx/v1/panel/Panel_M5HDMI.hpp"
+// #include <M5GFX.h>
+#include <lgfx/v1/panel/Panel_M5HDMI.hpp>
+#include <lgfx/v1/touch/Touch_XPT2046.hpp>
 
 #ifndef M5ATOMDISPLAY_LOGICAL_WIDTH
 #define M5ATOMDISPLAY_LOGICAL_WIDTH 1280
@@ -55,7 +52,8 @@
 #define M5ATOMDISPLAY_PIXELCLOCK 74250000
 #endif
 
-class M5AtomDisplayWithTouch : public M5GFX {
+class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
+  // class M5AtomDisplayWithTouch : public M5GFX {
  public:
   struct config_t {
     uint16_t logical_width = M5ATOMDISPLAY_LOGICAL_WIDTH;
@@ -95,73 +93,19 @@ class M5AtomDisplayWithTouch : public M5GFX {
   }
 
   bool init_impl(bool use_reset, bool use_clear) {
-    if (_panel_last.get() != nullptr) {
-      return true;
-    }
+    // if (_panel_last.get() != nullptr) {
+    //   return true;
+    // }
 
-#if !defined(CONFIG_IDF_TARGET_ESP32C3)
-
-#if defined(SDL_h_)
-    auto p = new lgfx::Panel_sdl();
-    if (!p) {
-      return false;
-    }
-    {
-      auto pnl_cfg = p->config();
-      pnl_cfg.memory_width = _config.logical_width;
-      pnl_cfg.panel_width = _config.logical_width;
-      pnl_cfg.memory_height = _config.logical_height;
-      pnl_cfg.panel_height = _config.logical_height;
-      pnl_cfg.bus_shared = false;
-      p->config(pnl_cfg);
-      p->setWindowTitle("AtomDisplay");
-    }
-
-#else
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-#define M5GFX_SPI_HOST SPI2_HOST
-
-    // for AtomS3/AtomS3Lite
-    int i2c_port = 1;
-    int i2c_sda = GPIO_NUM_38;
-    int i2c_scl = GPIO_NUM_39;
-    int spi_cs = GPIO_NUM_8;
-    int spi_mosi = GPIO_NUM_6;
-    int spi_miso = GPIO_NUM_5;
-    int spi_sclk = GPIO_NUM_7;
-
-#elif !defined(CONFIG_IDF_TARGET) || defined(CONFIG_IDF_TARGET_ESP32)
-#define M5GFX_SPI_HOST VSPI_HOST
-
-    int i2c_port = 1;
-    int i2c_sda = GPIO_NUM_25;
-    int i2c_scl = GPIO_NUM_21;
-    int spi_cs = GPIO_NUM_33;
-    int spi_mosi = GPIO_NUM_19;
-    int spi_miso = GPIO_NUM_22;
-    int spi_sclk = GPIO_NUM_5;
-
-    std::uint32_t pkg_ver = lgfx::get_pkg_ver();
-#if defined(ESP_LOGD)
-    ESP_LOGD("LGFX", "pkg:%d", pkg_ver);
-#endif
-    switch (pkg_ver) {
-      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:  // for ATOM Lite / Matrix
-        // ESP_LOGD("LGFX","AtomDisplay Lite");
-        spi_sclk = GPIO_NUM_23;
-        break;
-
-      default:
-        //  case 6: // EFUSE_RD_CHIP_VER_PKG_ESP32PICOV3_02: // ATOM PSRAM
-        // ESP_LOGD("LGFX","AtomDisplay PSRAM");
-        spi_sclk = GPIO_NUM_5;
-        break;
-    }
-
-#endif
-
-#if defined M5GFX_SPI_HOST
+    const int i2c_port = 1;
+    const int i2c_sda = GPIO_NUM_25;
+    const int i2c_scl = GPIO_NUM_21;
+    const int spi_cs = GPIO_NUM_33;
+    const int spi_cs_touch = 5;
+    const int spi_mosi = GPIO_NUM_19;
+    const int spi_miso = GPIO_NUM_22;
+    const int spi_sclk = GPIO_NUM_23;
+    const auto spi_host = VSPI_HOST;
 
     auto p = new lgfx::Panel_M5HDMI();
     if (!p) {
@@ -174,13 +118,8 @@ class M5AtomDisplayWithTouch : public M5GFX {
       cfg.freq_write = 80000000;
       cfg.freq_read = 16000000;
       cfg.spi_mode = 3;
-      cfg.spi_host = M5GFX_SPI_HOST;
-#undef M5GFX_SPI_HOST
-#ifndef M5ATOMDISPLAY_SPI_DMA_CH
-      cfg.dma_channel = 1;
-#else
+      cfg.spi_host = spi_host;
       cfg.dma_channel = M5ATOMDISPLAY_SPI_DMA_CH;
-#endif
       cfg.use_lock = true;
       cfg.pin_mosi = spi_mosi;
       cfg.pin_miso = spi_miso;
@@ -189,7 +128,7 @@ class M5AtomDisplayWithTouch : public M5GFX {
 
       bus_spi->config(cfg);
       p->setBus(bus_spi);
-      _bus_last.reset(bus_spi);
+      // _bus_last.reset(bus_spi);
     }
 
     {
@@ -211,7 +150,7 @@ class M5AtomDisplayWithTouch : public M5GFX {
       cfg.offset_rotation = 3;
       cfg.pin_cs = spi_cs;
       cfg.readable = false;
-      cfg.bus_shared = false;
+      cfg.bus_shared = true;
       p->config(cfg);
       p->setRotation(1);
 
@@ -226,31 +165,51 @@ class M5AtomDisplayWithTouch : public M5GFX {
       cfg_reso.pixel_clock = _config.pixel_clock;
       p->config_resolution(cfg_reso);
     }
-#endif
-#endif
     setPanel(p);
-    _panel_last.reset(p);
-#endif
+    // _panel_last.reset(p);
 
     if (lgfx::LGFX_Device::init_impl(use_reset, use_clear)) {
       return true;
     }
+    // {
+    //   auto t = new lgfx::Touch_XPT2046();
+    //   auto cfg = t->config();
+    //   cfg.bus_shared = true;
+    //   cfg.spi_host = spi_host;
+    //   cfg.pin_cs = spi_cs_touch;
+    //   cfg.pin_mosi = spi_mosi;
+    //   cfg.pin_miso = spi_miso;
+    //   cfg.pin_sclk = spi_sclk;
+    //   cfg.offset_rotation = 2;
+    //   t->config(cfg);
+    //   p->touch(t);
+    // }
     setPanel(nullptr);
-    _panel_last.reset();
+    // _panel_last.reset();
 
     return false;
   }
 
  protected:
   config_t _config;
-} display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+};
+
+#define DISPLAY_WIDTH 1024
+#define DISPLAY_HEIGHT 600
+
+M5AtomDisplayWithTouch display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 void setup() {
+  Serial.begin(115200);
   display.begin();
-  // touch.init();
 }
 
 void loop() {
+  display.setCursor(0, 0);
   display.println("hi " + String(millis()));
-  delay(10);
+  // lgfx::v1::touch_point_t pointTouch;
+  // display.getTouch(&pointTouch);
+  // Serial.println("x: " + String(pointTouch.x) + " y: " + String(pointTouch.y));
+  Serial.println(millis());
+  delay(500);
 }
