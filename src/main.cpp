@@ -3,6 +3,8 @@
 #include <LovyanGFX.hpp>
 #include <lgfx/v1/LGFXBase.hpp>
 
+#define PIN_ENABLE_CLK_TOUCH 27
+
 #if __has_include(<sdkconfig.h>)
 #include <sdkconfig.h>
 #include <soc/efuse_reg.h>
@@ -196,7 +198,10 @@ M5AtomDisplayWithTouch display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 void setup() {
   Serial.begin(115200);
+  pinMode(PIN_ENABLE_CLK_TOUCH, OUTPUT);
+  digitalWrite(PIN_ENABLE_CLK_TOUCH, LOW);
   display.begin();
+  digitalWrite(PIN_ENABLE_CLK_TOUCH, HIGH);
   // uint16_t calib[] = {215, 173, 205, 3916, 3733, 145, 3803, 3938};
   // 左下, 右下 ,左上, 右上
   // (215, 173) x方向接触点より外側に描画される -> (400, 0)
