@@ -1,11 +1,5 @@
 #include <Arduino.h>
 
-// If you want to use a set of functions to handle SD/SPIFFS/HTTP,
-//  please include <SD.h>,<SPIFFS.h>,<HTTPClient.h> before <M5GFX.h>
-// #include <SD.h>
-// #include <SPIFFS.h>
-// #include <HTTPClient.h>
-
 #include <LovyanGFX.hpp>
 #include <lgfx/v1/LGFXBase.hpp>
 
@@ -203,20 +197,32 @@ M5AtomDisplayWithTouch display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 void setup() {
   Serial.begin(115200);
   display.begin();
+  // uint16_t calib[] = {215, 173, 205, 3916, 3733, 145, 3803, 3938};
+  // 左下, 右下 ,左上, 右上
+  // (215, 173) x方向接触点より外側に描画される -> (400, 0)
+  // 右下横方向 3800外 4200内
+  uint16_t calib[] = {215, 50, 0, 4000, 3733, 60, 4000, 4000};
+  display.setTouchCalibrate(calib);
+  // uint16_t calib[8];
+  // display.calibrateTouch(calib, TFT_WHITE, TFT_BLACK);
+  // Serial.print("uint16_t calib[] = {");
+  // for (int i = 0; i < 8; ++i) {
+  //   if (i != 0) {
+  //     Serial.print(",");
+  //   }
+  //   Serial.print(calib[i]);
+  // }
+  // Serial.println("};");
 }
 
 void loop() {
   display.setCursor(0, 0);
   display.println("hi " + String(millis()));
   lgfx::v1::touch_point_t pointTouch;
-  bool touched = false;
   while (display.getTouch(&pointTouch) > 0) {
-    touched = true;
     Serial.println("x: " + String(pointTouch.x) +
                    " y: " + String(pointTouch.y));
-  }
-  if (touched) {
+    display.drawCircle(pointTouch.x, pointTouch.y, 1, TFT_WHITE);
     Serial.println(millis());
   }
-  delay(10);
 }
