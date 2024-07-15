@@ -165,25 +165,26 @@ class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
       cfg_reso.pixel_clock = _config.pixel_clock;
       p->config_resolution(cfg_reso);
     }
+    {
+      auto t = new lgfx::Touch_XPT2046();
+      auto cfg = t->config();
+      cfg.bus_shared = true;
+      cfg.spi_host = spi_host;
+      cfg.pin_cs = spi_cs_touch;
+      cfg.pin_mosi = spi_mosi;
+      cfg.pin_miso = spi_miso;
+      cfg.pin_sclk = spi_sclk;
+      cfg.offset_rotation = 1;
+      cfg.freq = 125000;
+      t->config(cfg);
+      p->touch(t);
+    }
     setPanel(p);
     // _panel_last.reset(p);
 
     if (lgfx::LGFX_Device::init_impl(use_reset, use_clear)) {
       return true;
     }
-    // {
-    //   auto t = new lgfx::Touch_XPT2046();
-    //   auto cfg = t->config();
-    //   cfg.bus_shared = true;
-    //   cfg.spi_host = spi_host;
-    //   cfg.pin_cs = spi_cs_touch;
-    //   cfg.pin_mosi = spi_mosi;
-    //   cfg.pin_miso = spi_miso;
-    //   cfg.pin_sclk = spi_sclk;
-    //   cfg.offset_rotation = 2;
-    //   t->config(cfg);
-    //   p->touch(t);
-    // }
     setPanel(nullptr);
     // _panel_last.reset();
 
@@ -207,9 +208,15 @@ void setup() {
 void loop() {
   display.setCursor(0, 0);
   display.println("hi " + String(millis()));
-  // lgfx::v1::touch_point_t pointTouch;
-  // display.getTouch(&pointTouch);
-  // Serial.println("x: " + String(pointTouch.x) + " y: " + String(pointTouch.y));
-  Serial.println(millis());
-  delay(500);
+  lgfx::v1::touch_point_t pointTouch;
+  bool touched = false;
+  while (display.getTouch(&pointTouch) > 0) {
+    touched = true;
+    Serial.println("x: " + String(pointTouch.x) +
+                   " y: " + String(pointTouch.y));
+  }
+  if (touched) {
+    Serial.println(millis());
+  }
+  delay(10);
 }
