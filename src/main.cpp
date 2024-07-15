@@ -97,7 +97,7 @@ class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
     const int i2c_sda = GPIO_NUM_25;
     const int i2c_scl = GPIO_NUM_21;
     const int spi_cs = GPIO_NUM_33;
-    const int spi_cs_touch = 5;
+    const int spi_cs_touch = GPIO_NUM_5;
     const int spi_mosi = GPIO_NUM_19;
     const int spi_miso = GPIO_NUM_22;
     const int spi_sclk = GPIO_NUM_23;
