@@ -206,7 +206,7 @@ void setup() {
   // 左下, 右下 ,左上, 右上
   // (215, 173) x方向接触点より外側に描画される -> (400, 0)
   // 右下横方向 3800外 4200内
-  uint16_t calib[] = {215, 50, 0, 4000, 3733, 60, 4000, 4000};
+  uint16_t calib[] = {215, 50, 0, 4000, 3733, 60, 3950, 4000};
   display.setTouchCalibrate(calib);
   // uint16_t calib[8];
   // display.calibrateTouch(calib, TFT_WHITE, TFT_BLACK);
