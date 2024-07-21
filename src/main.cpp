@@ -233,7 +233,7 @@ void loop() {
   display.setCursor(0, 0);
   display.println("hi " + String(millis()));
   lgfx::v1::touch_point_t pointTouch;
-  while (display.getTouch(&pointTouch) > 0) {
+  if (display.getTouch(&pointTouch) > 0) {
     Serial.println("x: " + String(pointTouch.x) +
                    " y: " + String(pointTouch.y));
     display.drawCircle(pointTouch.x, pointTouch.y, 1, TFT_WHITE);
