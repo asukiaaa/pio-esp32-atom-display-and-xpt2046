@@ -97,11 +97,20 @@ class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
     const int i2c_sda = GPIO_NUM_25;
     const int i2c_scl = GPIO_NUM_21;
     const int spi_cs = GPIO_NUM_33;
-    const int spi_cs_touch = GPIO_NUM_5;
     const int spi_mosi = GPIO_NUM_19;
     const int spi_miso = GPIO_NUM_22;
     const int spi_sclk = GPIO_NUM_23;
-    const auto spi_host = VSPI_HOST;
+    const auto spi_host = SPI2_HOST;
+
+    const int spi_touch_cs = GPIO_NUM_5;
+    // const int spi_touch_mosi = spi_mosi;
+    // const int spi_touch_miso = spi_miso;
+    // const int spi_touch_sclk = spi_sclk;
+    // const auto spi_touch_host = spi_host;
+    const int spi_touch_mosi = GPIO_NUM_18;
+    const int spi_touch_miso = GPIO_NUM_17;
+    const int spi_touch_sclk = GPIO_NUM_16;
+    const auto spi_touch_host = SPI3_HOST;
 
     auto p = new lgfx::Panel_M5HDMI();
     if (!p) {
@@ -146,7 +155,7 @@ class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
       cfg.offset_rotation = 3;
       cfg.pin_cs = spi_cs;
       cfg.readable = false;
-      cfg.bus_shared = true;
+      cfg.bus_shared = false;
       p->config(cfg);
       p->setRotation(1);
 
@@ -164,12 +173,12 @@ class M5AtomDisplayWithTouch : public lgfx::v1::LGFX_Device {
     {
       auto t = new lgfx::Touch_XPT2046();
       auto cfg = t->config();
-      cfg.bus_shared = true;
-      cfg.spi_host = spi_host;
-      cfg.pin_cs = spi_cs_touch;
-      cfg.pin_mosi = spi_mosi;
-      cfg.pin_miso = spi_miso;
-      cfg.pin_sclk = spi_sclk;
+      cfg.bus_shared = false;
+      cfg.spi_host = spi_touch_host;
+      cfg.pin_cs = spi_touch_cs;
+      cfg.pin_mosi = spi_touch_mosi;
+      cfg.pin_miso = spi_touch_miso;
+      cfg.pin_sclk = spi_touch_sclk;
       cfg.offset_rotation = 1;
       cfg.freq = 125000;
       t->config(cfg);
